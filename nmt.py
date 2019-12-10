@@ -42,6 +42,7 @@ def build_tokenizers(inputs, targets):
             "cache/tokenizer_inputs")
         tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file(
             "cache/tokenizer_targets")
+        print("Loaded tokenizers from cache.")
     except Exception:
         tokenizer_de = tfds.features.text.SubwordTextEncoder.build_from_corpus(
             inputs, target_vocab_size=2**13)
