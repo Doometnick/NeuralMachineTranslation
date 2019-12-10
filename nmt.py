@@ -32,27 +32,10 @@ inputs, targets = load_de_en_translations(
 print(f"Imported {len(inputs)} sentences.")
 
 def build_tokenizers(inputs, targets):
-    """ Builds a tokenizer for both inputs and targets.
-    This step can take a long time, therefore the tokenizer
-    is cached. """
-    tkn_inp_name = "tokenizer_inp"
-    tkn_tar_name = "tokenizer_tar"
-    try:
-        tokenizer_de = tfds.features.text.SubwordTextEncoder.load_from_file(
-            "cache/tokenizer_inputs")
-        tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file(
-            "cache/tokenizer_targets")
-        print("Loaded tokenizers from cache.")
-    except Exception:
-        tokenizer_de = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+    tokenizer_de = tfds.features.text.SubwordTextEncoder.build_from_corpus(
             inputs, target_vocab_size=2**13)
-        tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-            targets, target_vocab_size=2**13)
-        cache_fld = "cache"
-        if not os.path.exists(cache_fld):
-            os.makedirs(cache_fld)
-        tokenizer_de.save_to_file(os.path.join(cache_fld, tkn_inp_name))
-        tokenizer_en.save_to_file(os.path.join(cache_fld, tkn_tar_name))
+    tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+        targets, target_vocab_size=2**13)
     return tokenizer_de, tokenizer_en
 
 tokenizer_de, tokenizer_en = build_tokenizers(inputs, targets)
@@ -490,10 +473,10 @@ checkpoint = tf.train.Checkpoint(transformer=transformer,
                                  optimizer=optimizer)
 ckpt_manager = tf.train.CheckpointManager(
     checkpoint, checkpoint_dir, max_to_keep=2)
-try:
-   checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
-except Exception:
-   print("Could not load checkpoint.")
+
+if tf.train.latest_checkpoint(checkpoint_dir):
+    checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+    print("Checkpoint loaded.")
 
 # Training
 EPOCHS = 10
